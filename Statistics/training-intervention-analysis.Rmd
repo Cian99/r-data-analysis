@@ -1,0 +1,135 @@
+---
+title: "Training Intervention Analysis"
+author: "Cian"
+date: "October 2018"
+output:
+  word_document: default
+  html_document: default
+---
+
+## Load the required libraries
+```{r}
+library(infer)
+library(tidyverse)
+library(tolerance)
+```
+
+## Read in the training intervention data and view its structure
+```{r}
+
+train.df <- read.csv("Training_intervention_data.csv")
+glimpse(train.df)
+
+```
+
+## Summary statistics for pre and post squat
+```{r}
+train.df %>% select(Squat_Pre, Squat_Post) %>% summary()
+
+```
+
+## Mean and standard deviation for pre and post squat
+```{r}
+
+train.df %>% select(Squat_Pre, Squat_Post) %>%
+            summarize(Pre_Mean=mean(Squat_Pre), Pre_SD= sd(Squat_Pre),
+                      Post_Mean=mean(Squat_Post), Post_SD= sd(Squat_Post))
+
+```
+
+## Scatterplot of pre and post with line of equality
+```{r}
+
+train.df %>% ggplot(aes(x = Squat_Pre, y = Squat_Post)) +
+        geom_point() + 
+  ggtitle("Scatterplot of Pre and Post Squat") +
+  ylab("Pre Squat (units ?)") +
+  xlab("Post Squat (units ?)") +
+  geom_abline(slope=1, intercept=0)
+  
+```
+
+## Calculate the improvement
+```{r}
+
+train.df <- train.df %>% mutate(Improvement = Squat_Post-Squat_Pre) %>%
+              glimpse()
+
+```
+
+## Mean and standard deviation of improvement
+```{r}
+
+train.df %>% select(Improvement) %>%
+            summarize(Imp_Mean=mean(Improvement), Imp_SD= sd(Improvement))
+
+```
+
+## Boxplot to visualize the improvement
+```{r}
+
+train.df %>% ggplot(aes(x = "", y = Improvement)) +
+        geom_boxplot() + 
+  ggtitle("Boxplot of Improvment in Squat") +
+  ylab("Improvment in Squat (units ?)") +
+  xlab("") +
+  coord_flip()
+
+```
+
+## T-test to get 95% confidence interval for improvement
+```{r}
+
+train.df %>% select(Improvement) %>% t.test()
+
+```
+
+## Bootstrap to calculate confidence interval for mean of improvement
+```{r}
+
+boot <- train.df %>%
+  specify(response = Improvement) %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+
+percentile_ci <- get_ci(boot)
+round(percentile_ci,2)
+
+```
+
+## Visualize the bootstrap distribution with confidence intervals
+```{r}
+boot %>% visualize(endpoints = percentile_ci, direction = "between") +
+                   xlab("Bootstrap Mean") + ylab("Frequency")
+
+```
+
+## Bootstrap to calculate confidence interval for median of improvement
+```{r}
+
+boot.median <- train.df %>%
+  specify(response = Improvement) %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "median")
+
+percentile_ci_median <- get_ci(boot.median)
+round(percentile_ci_median,2)
+
+```
+
+## Visualize the bootstrap distribution with confidence intervals
+```{r}
+boot.median %>% visualize(endpoints = percentile_ci_median, direction = "between") +
+                   xlab("Bootstrap Median") + ylab("Frequency")
+
+```
+
+## Calculate the 95% tolerance interval for improvement
+```{r}
+
+normtol.int(train.df$Improvement, alpha = 0.05, P = 0.95)
+
+```
+
+## Conclusion
+In conclusion the data definitely shows an improvement in squats over the 10 weeks. The variables Pre_Mean and Post_Mean clearly show that the average after the 10 weeks was much higher than before. The scatterplot with line of equality clearly display this. The variable Improvement then displays the improvement for each individual. The mean improvement is 29.4 with the standard deviation being 6.4. The 95% confidence interval indicates that improvement lies between 26.27 and 32.62. The 95% bootstrap CI for the mean displayed very similar values of 26.67 and 32.22.

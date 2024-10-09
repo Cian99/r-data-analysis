@@ -1,0 +1,46 @@
+---
+title: "Data Summary Eg"
+author: "Cian"
+date: "September 2018"
+output: word_document
+---
+
+## Simple Example
+
+I have created some data and have calculated some numerical and graphical summaries.
+
+These are the data:
+```{r create data and calculate mean}
+
+data1 <- c(10, 23,14,12,34,26,28,58,61)
+
+```
+
+The mean is:
+```{r}
+
+mean(data1)
+
+```
+
+The summary statistics are:
+```{r}
+
+summary(data1)
+
+```
+
+A boxplot would look like:
+```{r}
+
+boxplot(data1)
+
+```
+
+
+And a histogram:
+```{r}
+
+hist(data1)
+
+```
